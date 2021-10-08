@@ -1,0 +1,17 @@
+image: php:7.3
+
+pipelines:
+  tags:
+    '*':
+      - step:
+          name: Build installable Zip archive
+          script:
+            - cd ..
+            - export PLUGINTYPE=format
+            - export PLUGINNAME=remuiformat
+            - export MOODLEVERSION=37
+            - export ARCHIVENAME=${PLUGINTYPE}_${PLUGINNAME}_moodle${MOODLEVERSION}_${BITBUCKET_TAG}.zip
+            - cp -R build $PLUGINNAME
+            - apt-get update && apt-get install --yes zip
+            - zip -r $ARCHIVENAME $PLUGINNAME --exclude="*.git/*" --exclude="*bitbucket-pipelines.yml*"
+            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"${ARCHIVENAME}"
